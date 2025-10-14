@@ -1,0 +1,46 @@
+{
+  "name": "study-collab",
+  "version": "1.0.0",
+  "description": "A modern, full-stack class management system (Angular + Node/Express + MongoDB)",
+  "main": "index.js",
+  "scripts": {
+    "install:backend": "cd backend && npm install",
+    "install:frontend-angular": "cd frontend-angular && npm install",
+    "install:all": "npm run install:backend && npm run install:frontend-angular",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend-angular": "cd frontend-angular && npm start",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend-angular\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend-angular": "cd frontend-angular && npm run build && npx serve -s dist/study-collab-angular",
+    "build:frontend-angular": "cd frontend-angular && npm run build",
+    "test:backend": "cd backend && npm test"
+  },
+  "keywords": [
+    "class-management",
+    "education",
+    "angular",
+    "nodejs",
+    "mongodb",
+    "express",
+    "socket.io",
+    "jwt-authentication"
+  ],
+  "author": "Versity Development Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/<your-username>/<your-repo>.git"
+  },
+  "bugs": {
+    "url": "https://github.com/<your-username>/<your-repo>/issues"
+  },
+  "homepage": "https://github.com/<your-username>/<your-repo>#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "serve": "^14.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

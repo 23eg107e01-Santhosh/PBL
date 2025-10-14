@@ -1,0 +1,55 @@
+.sidenav-container { height:100vh; background: var(--color-bg); }
+
+.sidenav { width:240px; background: var(--color-surface) !important; border-right:1px solid var(--color-border) !important; }
+
+.sidebar-header { padding:20px; background: var(--color-surface-alt); text-align:center; box-shadow: var(--shadow-sm); border-bottom:1px solid var(--color-border); }
+
+.sidebar-title { margin:0; font-size:1.3rem; font-weight:600; color: var(--color-text); }
+
+.sidebar-nav {
+  padding: 16px 8px;
+  
+  .nav-item { margin-bottom:6px; border-radius: var(--radius-md); transition: background .25s, color .25s; padding:4px 8px;
+    display:flex; align-items:center;
+    &:hover { background: var(--color-surface-alt) !important; }
+    &.active { background: var(--color-primary) !important; color:#fff; box-shadow: var(--shadow-sm);
+      mat-icon { color:#fff; }
+    }
+    mat-icon { color: var(--color-text-muted); margin-right:8px; }
+  }
+}
+
+.toolbar { background: var(--color-surface) !important; border-bottom:1px solid var(--color-border); box-shadow: var(--shadow-md); min-height:70px; padding:0 20px; }
+
+.menu-button {
+  margin-right: 16px;
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.user-name { margin-right:16px; color: var(--color-text-muted); font-weight:500; display:none; @media (min-width:600px){ display:inline; } }
+
+.user-avatar-button {
+  padding: 0;
+}
+
+.user-avatar { width:40px; height:40px; border-radius:50%; background: var(--color-primary); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; font-size:1.05rem; box-shadow: var(--shadow-sm); }
+
+.page-content { padding:24px; min-height:calc(100vh - 70px); background: var(--color-bg-alt); position:relative; }
+
+::ng-deep {
+  .user-menu {
+    .mat-mdc-menu-content { background-color: var(--color-surface); border:1px solid var(--color-border); border-radius: var(--radius-lg); }
+    
+    .mat-mdc-menu-item {
+      border-radius: 8px;
+      margin: 4px 8px;
+      
+      &:hover { background-color: var(--color-surface-alt) !important; }
+      
+      &.logout-item { color: var(--color-danger); }
+    }
+  }
+}

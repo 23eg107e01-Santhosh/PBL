@@ -1,0 +1,172 @@
+/* You can add global styles to this file, and also import other style files */
+/* Angular Material prebuilt theme is included via angular.json styles array */
+/* Replace deprecated Sass @import with modern @use for ngx-toastr */
+@use 'ngx-toastr/toastr' as *;
+
+/* Global Dark Theme Styles */
+:root {
+  --color-bg: #101317;
+  --color-bg-alt: #161b22;
+  --color-surface: #1f242b;
+  --color-surface-alt: #262d35;
+  --color-border: #303840;
+  --color-border-strong: #3d4752;
+  --color-text: #e6e9ed;
+  --color-text-muted: #9aa4af;
+  --color-primary: #4c6ef5;
+  --color-primary-hover: #3f60e6;
+  --color-accent: #ffb547;
+  --color-success: #3fbf7f;
+  --color-danger: #ef5f56;
+  --color-warning: #f2a927;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 10px -2px rgba(0,0,0,.55);
+  --shadow-lg: 0 8px 24px -6px rgba(0,0,0,.55);
+  --focus-ring: 0 0 0 3px rgba(76,110,245,.35);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  height:100%;
+  font-family: 'Inter','Roboto','Helvetica','Arial',sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body { margin:0; }
+
+/* Material Design Overrides for Dark Theme */
+.mat-mdc-card {
+  background-color: var(--color-surface) !important;
+  border: 1px solid var(--color-border) !important;
+  box-shadow: var(--shadow-md) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: box-shadow .25s, border-color .25s;
+  &:hover { box-shadow: var(--shadow-lg) !important; border-color: var(--color-border-strong) !important; }
+}
+
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper { background-color: var(--color-surface-alt) !important; }
+  .mdc-text-field--outlined {
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing { border-color: var(--color-border) !important; }
+    &:hover .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing { border-color: var(--color-border-strong) !important; }
+    }
+    &.mdc-text-field--focused .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing { border-color: var(--color-primary) !important; }
+    }
+  }
+  .mat-mdc-input-element { color: var(--color-text) !important; }
+  .mat-mdc-form-field-hint,
+  .mat-mdc-form-field-error { color: var(--color-text-muted); }
+}
+
+.mat-mdc-raised-button.mat-primary,
+.mat-mdc-unelevated-button.mat-primary,
+.mat-mdc-fab.mat-primary,
+.mat-mdc-mini-fab.mat-primary {
+  background: var(--color-primary) !important;
+  color:#fff !important;
+  box-shadow: var(--shadow-sm) !important;
+  &:hover:not([disabled]) { background: var(--color-primary-hover) !important; box-shadow: var(--shadow-md) !important; }
+  &:focus-visible { outline:none; box-shadow: var(--focus-ring) !important; }
+}
+
+.mat-mdc-button,
+.mat-mdc-outlined-button {
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  text-transform: none !important;
+}
+
+.mat-mdc-chip { background-color: var(--color-surface-alt) !important; color: var(--color-text) !important; font-weight:500; }
+
+.mat-mdc-table { background-color: var(--color-surface) !important; 
+  .mat-mdc-header-row { background-color: var(--color-surface-alt) !important; }
+  .mat-mdc-row { &:hover { background-color: var(--color-surface-alt) !important; } &:nth-child(odd){ background-color: var(--color-bg-alt) !important; } }
+  .mat-mdc-header-cell { color: var(--color-text) !important; font-weight:600 !important; }
+  .mat-mdc-cell { color: var(--color-text) !important; }
+}
+
+.mat-mdc-dialog-container { background-color: var(--color-surface) !important; border:1px solid var(--color-border) !important; color: var(--color-text) !important; }
+
+.mat-mdc-select-panel { background-color: var(--color-surface) !important; border:1px solid var(--color-border) !important; }
+
+.mat-mdc-option { color: var(--color-text) !important; &:hover { background-color: var(--color-surface-alt) !important; } &.mat-mdc-option-active { background-color: var(--color-surface-alt) !important; } }
+
+.mat-mdc-menu-panel { background-color: var(--color-surface) !important; border:1px solid var(--color-border) !important; border-radius: var(--radius-lg) !important; }
+
+.mat-mdc-menu-item { color: var(--color-text) !important; &:hover { background-color: var(--color-surface-alt) !important; } .mat-icon { color: var(--color-text-muted) !important; } }
+
+.mat-divider { border-top-color: var(--color-border) !important; }
+
+/* Title/Text Color Enforcement */
+h1, h2, h3, h4, h5, h6,
+.page-title,
+mat-card-title, .mat-mdc-card-title,
+mat-card-subtitle, .mat-mdc-card-subtitle,
+[matListItemTitle], .mat-mdc-list-item-title, .mdc-list-item__primary-text,
+[matListItemLine], .mdc-list-item__secondary-text,
+.mat-mdc-tab .mdc-tab__text-label,
+.mat-toolbar, .mat-mdc-toolbar .mdc-toolbar__title,
+.mat-mdc-button .mdc-button__label,
+.mat-mdc-raised-button .mdc-button__label {
+  color: var(--color-text) !important;
+}
+
+/* Sidebar nav title and text */
+.sidenav .mat-mdc-list-item .mdc-list-item__primary-text,
+.sidebar-title {
+  color: var(--color-text) !important;
+}
+
+/* Toast Overrides */
+.toast-success { background-color: var(--color-success) !important; }
+.toast-error { background-color: var(--color-danger) !important; }
+.toast-info { background-color: var(--color-primary) !important; }
+.toast-warning { background-color: var(--color-warning) !important; }
+
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track { background: var(--color-bg-alt); }
+
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius:4px; &:hover { background: var(--color-border-strong); } }
+
+/* Utility Classes */
+.full-width {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 8px; }
+.mt-2 { margin-top: 16px; }
+.mt-3 { margin-top: 24px; }
+.mt-4 { margin-top: 32px; }
+
+.mb-1 { margin-bottom: 8px; }
+.mb-2 { margin-bottom: 16px; }
+.mb-3 { margin-bottom: 24px; }
+.mb-4 { margin-bottom: 32px; }
+
+.p-1 { padding: 8px; }
+.p-2 { padding: 16px; }
+.p-3 { padding: 24px; }
+.p-4 { padding: 32px; }

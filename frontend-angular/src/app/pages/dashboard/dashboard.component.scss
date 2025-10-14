@@ -1,0 +1,132 @@
+.dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 24px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.welcome-card {
+  margin-bottom: 24px;
+  background: linear-gradient(45deg, #3f51b5 30%, #5c6bc0 90%) !important;
+  color: white !important;
+  
+  h2 {
+    margin: 0 0 8px 0;
+    font-size: 1.5rem;
+  }
+  
+  p {
+    margin: 0;
+    opacity: 0.9;
+  }
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  text-align: center;
+  
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    
+    mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+    
+    &.assignments {
+      background: linear-gradient(45deg, #2196f3, #64b5f6);
+    }
+    
+    &.announcements {
+      background: linear-gradient(45deg, #ff9800, #ffb74d);
+    }
+    
+    &.students {
+      background: linear-gradient(45deg, #4caf50, #81c784);
+    }
+  }
+  
+  h3 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: #ffffff;
+  }
+  
+  p {
+    margin: 0;
+    color: #b3b3b3;
+    font-weight: 500;
+  }
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+}
+
+.content-card {
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+  
+  mat-card-header {
+    mat-card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+  }
+  
+  .empty-message {
+    text-align: center;
+    color: #b3b3b3;
+    padding: 24px;
+    margin: 0;
+  }
+}
+
+::ng-deep {
+  .mat-mdc-card {
+    background-color: #1e1e1e !important;
+    border: 1px solid #333333;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  }
+  
+  .mat-mdc-list-item {
+    border-bottom: 1px solid #333333;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+}

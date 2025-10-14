@@ -1,0 +1,125 @@
+.register-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 20%, rgba(63, 81, 181, 0.2) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(255, 64, 129, 0.2) 0%, transparent 50%);
+    pointer-events: none;
+  }
+}
+
+.register-wrapper {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 500px;
+}
+
+.register-card {
+  padding: 48px;
+  background-color: #1e1e1e !important;
+  border: 1px solid #333333;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(45deg, #3f51b5 30%, #5c6bc0 90%);
+  }
+}
+
+.register-header {
+  text-align: center;
+  margin-bottom: 32px;
+  padding-top: 16px;
+}
+
+.app-title {
+  background: linear-gradient(45deg, #3f51b5 30%, #5c6bc0 90%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+}
+
+.app-subtitle {
+  color: #b3b3b3;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.form-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+.form-subtitle {
+  color: #b3b3b3;
+  text-align: center;
+  margin: 0 0 32px 0;
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.submit-button {
+  width: 100%;
+  height: 48px;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 8px;
+  background: linear-gradient(45deg, #3f51b5 30%, #5c6bc0 90%);
+  border-radius: 8px;
+
+  &:hover:not([disabled]) {
+    background: linear-gradient(45deg, #3949ab 30%, #5368c7 90%);
+  }
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 24px;
+  
+  p {
+    color: #b3b3b3;
+    margin: 0;
+    
+    a {
+      color: #5c6bc0;
+      text-decoration: none;
+      font-weight: 600;
+      
+      &:hover {
+        color: #7986cb;
+        text-decoration: underline;
+      }
+    }
+  }
+}

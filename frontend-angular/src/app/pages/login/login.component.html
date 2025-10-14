@@ -1,0 +1,53 @@
+<div class="login-container">
+  <div class="login-wrapper">
+    <mat-card class="login-card">
+      <mat-card-content>
+        <div class="login-header">
+          <h1 class="app-title">Study Collab</h1>
+          <p class="app-subtitle">Student Collaboration Platform</p>
+        </div>
+
+        <h2 class="form-title">Welcome Back</h2>
+        <p class="form-subtitle">Please sign in to your account</p>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email Address</mat-label>
+            <input matInput type="email" formControlName="email" placeholder="Enter your email">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="f['email'].hasError('required')">
+              Email is required
+            </mat-error>
+            <mat-error *ngIf="f['email'].hasError('email')">
+              Please enter a valid email
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Enter your password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="f['password'].hasError('required')">
+              Password is required
+            </mat-error>
+            <mat-error *ngIf="f['password'].hasError('minlength')">
+              Password must be at least 6 characters
+            </mat-error>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit" class="submit-button" [disabled]="loading">
+            <mat-spinner *ngIf="loading" diameter="20" class="button-spinner"></mat-spinner>
+            <span *ngIf="!loading">Sign In</span>
+          </button>
+        </form>
+
+        <div class="register-link">
+          <p>Don't have an account? <a routerLink="/register">Register here</a></p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

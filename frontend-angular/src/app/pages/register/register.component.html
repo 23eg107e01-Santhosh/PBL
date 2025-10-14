@@ -1,0 +1,73 @@
+<div class="register-container">
+  <div class="register-wrapper">
+    <mat-card class="register-card">
+      <mat-card-content>
+        <div class="register-header">
+          <h1 class="app-title">Study Collab</h1>
+          <p class="app-subtitle">Student Collaboration Platform</p>
+        </div>
+
+        <h2 class="form-title">Create Account</h2>
+        <p class="form-subtitle">Join us to get started</p>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Full Name</mat-label>
+            <input matInput type="text" formControlName="fullName" placeholder="Enter your full name">
+            <mat-icon matPrefix>account_circle</mat-icon>
+            <mat-error *ngIf="f['fullName'].hasError('required')">Full name is required</mat-error>
+            <mat-error *ngIf="f['fullName'].hasError('minlength')">Name must be at least 2 characters</mat-error>
+            <mat-error *ngIf="f['fullName'].hasError('maxlength')">Name must be at most 150 characters</mat-error>
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Email Address</mat-label>
+            <input matInput type="email" formControlName="email" placeholder="Enter your email">
+            <mat-icon matPrefix>email</mat-icon>
+            <mat-error *ngIf="f['email'].hasError('required')">Email is required</mat-error>
+            <mat-error *ngIf="f['email'].hasError('email')">Please enter a valid email</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Password</mat-label>
+            <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Create password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+              <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="f['password'].hasError('required')">Password is required</mat-error>
+            <mat-error *ngIf="f['password'].hasError('minlength')">Password must be at least 6 characters</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Confirm Password</mat-label>
+            <input matInput [type]="hideConfirmPassword ? 'password' : 'text'" formControlName="confirmPassword" placeholder="Confirm password">
+            <mat-icon matPrefix>lock</mat-icon>
+            <button mat-icon-button matSuffix type="button" (click)="hideConfirmPassword = !hideConfirmPassword">
+              <mat-icon>{{ hideConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="f['confirmPassword'].hasError('required')">Please confirm your password</mat-error>
+            <mat-error *ngIf="registerForm.hasError('mismatch') && f['confirmPassword'].touched">Passwords do not match</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Role</mat-label>
+            <mat-select formControlName="role">
+              <mat-option value="student">Student</mat-option>
+              <mat-option value="teacher">Teacher</mat-option>
+            </mat-select>
+            <mat-icon matPrefix>person</mat-icon>
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit" class="submit-button" [disabled]="loading">
+            <mat-spinner *ngIf="loading" diameter="20" class="button-spinner"></mat-spinner>
+            <span *ngIf="!loading">Register</span>
+          </button>
+        </form>
+
+        <div class="login-link">
+          <p>Already have an account? <a routerLink="/login">Sign in here</a></p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
