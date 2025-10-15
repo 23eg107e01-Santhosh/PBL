@@ -5,6 +5,7 @@ const Student = require('./Student');
 const Teacher = require('./Teacher');
 const ClassRoutine = require('./ClassRoutine');
 const Assignment = require('./Assignment');
+const Schedule = require('./Schedule');
 const Announcement = require('./Announcement');
 const UpcomingExam = require('./UpcomingExam');
 const ChatMessage = require('./ChatMessage');
@@ -24,6 +25,7 @@ module.exports = {
   Teacher,
   ClassRoutine,
   Assignment,
+  Schedule,
   Announcement,
   UpcomingExam,
   ChatMessage,

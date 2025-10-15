@@ -16,7 +16,7 @@ const { assignmentValidation } = require('../middleware/validation');
 // @access  Private (Admin/Teacher/CR only)
 router.post('/', 
   authenticate, 
-  authorize('admin', 'teacher', 'cr'),
+  authorize('admin', 'teacher'),
   requireApproval,
   assignmentValidation, 
   createAssignment
@@ -54,7 +54,7 @@ router.get('/:id',
 // @access  Private (Admin/Teacher/CR only)
 router.put('/:id', 
   authenticate, 
-  authorize('admin', 'teacher', 'cr'),
+  authorize('admin', 'teacher'),
   requireApproval,
   assignmentValidation, 
   updateAssignment

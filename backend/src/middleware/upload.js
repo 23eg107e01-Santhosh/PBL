@@ -66,3 +66,14 @@ module.exports = {
   upload,
   uploadFields
 };
+
+// Dedicated chat upload middleware with 20MB limit
+const chatUpload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 20 * 1024 * 1024 // 20MB for chat uploads
+  },
+  fileFilter: fileFilter
+});
+
+module.exports.uploadChatSingle = chatUpload.single('attachmentFile');

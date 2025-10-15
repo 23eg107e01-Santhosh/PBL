@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RoomService } from '../../core/services/room.service';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-room-list',
@@ -10,7 +11,7 @@ import { ToastrService } from 'ngx-toastr';
     <div class="page-container">
       <h1>Classrooms</h1>
       <div class="forms">
-        <form [formGroup]="createForm" (ngSubmit)="create()">
+        <form [formGroup]="createForm" (ngSubmit)="create()" *ngIf="isTeacher">
           <mat-form-field appearance="outline">
             <mat-label>Title</mat-label>
             <input matInput formControlName="title" />
@@ -22,7 +23,7 @@ import { ToastrService } from 'ngx-toastr';
           <button mat-raised-button color="primary" type="submit">Create</button>
         </form>
 
-        <form [formGroup]="joinForm" (ngSubmit)="join()">
+        <form [formGroup]="joinForm" (ngSubmit)="join()" *ngIf="isStudent">
           <mat-form-field appearance="outline">
             <mat-label>Room Code</mat-label>
             <input matInput formControlName="code" />
@@ -32,10 +33,15 @@ import { ToastrService } from 'ngx-toastr';
       </div>
 
       <div class="room-grid">
-        <mat-card *ngFor="let r of rooms" (click)="open(r)" class="room-card">
+        <mat-card *ngFor="let r of rooms" class="room-card">
           <mat-card-title>{{ r.title }}</mat-card-title>
           <mat-card-subtitle>Code: {{ r.code }}</mat-card-subtitle>
           <mat-card-content>{{ r.description }}</mat-card-content>
+          <mat-card-actions>
+            <button mat-stroked-button color="primary" (click)="open(r)">Open</button>
+            <button mat-button color="accent" (click)="openChat(r)">Open Chat</button>
+            <button mat-button color="warn" *ngIf="isTeacher" (click)="deleteRoom(r)">Delete</button>
+          </mat-card-actions>
         </mat-card>
       </div>
     </div>
@@ -47,8 +53,13 @@ export class RoomListComponent implements OnInit {
   createForm!: FormGroup;
   joinForm!: FormGroup;
   rooms: any[] = [];
-  constructor(private fb: FormBuilder, private roomsApi: RoomService, private router: Router, private toastr: ToastrService) {}
+  isTeacher = false;
+  isStudent = false;
+  constructor(private fb: FormBuilder, private roomsApi: RoomService, private router: Router, private toastr: ToastrService, private auth: AuthService) {}
   ngOnInit(): void {
+    const role = this.auth.currentUserValue?.role || '';
+    this.isTeacher = role === 'teacher' || role === 'admin';
+    this.isStudent = role === 'student';
     this.createForm = this.fb.group({ title: ['', Validators.required], description: [''] });
     this.joinForm = this.fb.group({ code: ['', Validators.required] });
     this.load();
@@ -57,4 +68,17 @@ export class RoomListComponent implements OnInit {
   create(): void { if (this.createForm.invalid) return; this.roomsApi.create(this.createForm.value).subscribe(res => { this.toastr.success('Room created'); this.load(); }); }
   join(): void { if (this.joinForm.invalid) return; this.roomsApi.join(this.joinForm.value.code).subscribe(res => { this.toastr.success('Joined room'); this.load(); }); }
   open(r:any){ this.router.navigate(['/rooms', r._id || r.id]); }
+  openChat(r:any){ this.router.navigate(['/class-chat', r._id || r.id]); }
+  
+  deleteRoom(r: any): void {
+    if (confirm('Are you sure you want to delete this room? This action cannot be undone.')) {
+      this.roomsApi.delete(r._id || r.id).subscribe({
+        next: () => {
+          this.toastr.success('Room deleted successfully');
+          this.load();
+        },
+        error: () => this.toastr.error('Failed to delete room')
+      });
+    }
+  }
 }

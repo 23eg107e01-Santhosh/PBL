@@ -7,7 +7,14 @@
     "start": "node --no-deprecation src/server.js",
     "dev": "nodemon --exec \"node --no-deprecation\" src/server.js",
     "dev-verbose": "nodemon src/server.js",
-    "test": "jest"
+    "test": "jest",
+    "seed:students": "node scripts/addDemoStudents.js",
+    "seed:schedules": "node scripts/addDemoSchedules.js",
+    "seed:assignments": "node scripts/addDemoAssignments.js",
+    "seed:classrooms": "node scripts/addDemoClassrooms.js",
+    "seed:departments": "node scripts/populateDepartments.js",
+    "seed:sections": "node scripts/populateSections.js",
+    "seed:demo": "npm run seed:departments && npm run seed:sections && npm run seed:students && npm run seed:schedules && npm run seed:assignments && npm run seed:classrooms"
   },
   "keywords": ["express", "mongodb", "nodejs", "education", "class-management"],
   "author": "Versity Team",

@@ -236,3 +236,32 @@ export class UserService extends ApiService {
     return this.http.put(`${this.apiUrl}/auth/profile`, userData);
   }
 }
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ScheduleService extends ApiService {
+  create(scheduleData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/schedules`, scheduleData);
+  }
+
+  getAll(params?: any): Observable<any> {
+    return this.http.get(`${this.apiUrl}/schedules`, { params: this.buildParams(params) });
+  }
+
+  getById(id: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/schedules/${id}`);
+  }
+
+  getCalendarView(params?: any): Observable<any> {
+    return this.http.get(`${this.apiUrl}/schedules/calendar`, { params: this.buildParams(params) });
+  }
+
+  update(id: string, scheduleData: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/schedules/${id}`, scheduleData);
+  }
+
+  delete(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/schedules/${id}`);
+  }
+}

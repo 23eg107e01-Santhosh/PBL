@@ -12,9 +12,8 @@ const connectDB = require('./utils/database');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const studentRoutes = require('./routes/students');
-const classRoutineRoutes = require('./routes/classRoutines');
 const assignmentRoutes = require('./routes/assignments');
-const announcementRoutes = require('./routes/announcements');
+const scheduleRoutes = require('./routes/schedules');
 const academicRoutes = require('./routes/academic');
 const chatRoutes = require('./routes/chat');
 const roomRoutes = require('./routes/rooms');
@@ -96,9 +95,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/students', studentRoutes);
-app.use('/api/class-routines', classRoutineRoutes);
 app.use('/api/assignments', assignmentRoutes);
-app.use('/api/announcements', announcementRoutes);
+app.use('/api/schedules', scheduleRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/resources', resourceRoutes);
@@ -227,6 +225,42 @@ io.on('connection', (socket) => {
       message: text,
       createdAt: msg.createdAt
     });
+  });
+
+  // Typing indicator
+  socket.on('typing', ({ roomId, userId, isTyping }) => {
+    if (!roomId || !userId) return;
+    socket.to(roomId).emit('typing', { userId, isTyping: !!isTyping, timestamp: Date.now() });
+  });
+
+  // File message broadcast (client uploads via HTTP then emits this with URL)
+  socket.on('fileUpload', async ({ roomId, senderId, fileUrl, fileName }) => {
+    if (!roomId || !senderId || !fileUrl) return;
+    try {
+      // Persist as a chat message with attachment
+      const msg = await ChatMessage.create({ 
+        sender: senderId, 
+        chatRoom: roomId, 
+        message: fileName || 'File', 
+        messageType: 'file', 
+        fileUrl 
+      });
+      
+      // Broadcast to all clients in the room
+      io.to(roomId).emit('fileUpload', {
+        _id: msg._id,
+        sender: senderId,
+        chatRoom: roomId,
+        message: fileName || 'File',
+        messageType: 'file',
+        fileUrl,
+        fileName: fileName || null,
+        createdAt: msg.createdAt
+      });
+    } catch (error) {
+      console.error('Error saving file message:', error);
+      socket.emit('error', { message: 'Failed to save file message' });
+    }
   });
 
   socket.on('disconnect', () => {

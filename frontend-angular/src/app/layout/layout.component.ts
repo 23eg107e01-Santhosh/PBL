@@ -28,12 +28,6 @@ export class LayoutComponent implements OnInit {
       roles: ['admin', 'teacher', 'student']
     },
     {
-      text: 'Class Schedule',
-      icon: 'schedule',
-      path: '/schedule',
-      roles: ['admin', 'teacher', 'student']
-    },
-    {
       text: 'Manage Schedules',
       icon: 'calendar_today',
       path: '/teacher-schedule',
@@ -44,18 +38,6 @@ export class LayoutComponent implements OnInit {
       icon: 'assignment',
       path: '/assignments',
       roles: ['admin', 'teacher', 'student']
-    },
-    {
-      text: 'Announcements',
-      icon: 'announcement',
-      path: '/announcements',
-      roles: ['admin', 'teacher', 'student']
-    },
-    {
-      text: 'Students',
-      icon: 'people',
-      path: '/students',
-      roles: ['admin', 'teacher']
     },
     {
       text: 'Classrooms',

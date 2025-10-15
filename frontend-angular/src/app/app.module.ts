@@ -15,14 +15,13 @@ import { LayoutComponent } from './layout/layout.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
-import { ClassScheduleComponent } from './pages/class-schedule/class-schedule.component';
 import { TeacherScheduleManagerComponent } from './pages/teacher-schedule-manager/teacher-schedule-manager.component';
 import { ProfileComponent } from './pages/profile/profile.component';
-import { AnnouncementsComponent } from './pages/announcements/announcements.component';
 import { AssignmentsComponent } from './pages/assignments/assignments.component';
 import { StudentsComponent } from './pages/students/students.component';
 import { RoomListComponent } from './pages/room-list/room-list.component';
 import { RoomDetailComponent } from './pages/room-detail/room-detail.component';
+import { ClassChatComponent } from './pages/class-chat/class-chat.component';
 
 // Material modules
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -50,6 +49,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatGridListModule } from '@angular/material/grid-list';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 // Toastr
 import { ToastrModule } from 'ngx-toastr';
@@ -64,14 +64,13 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     DashboardComponent,
     LoginComponent,
     RegisterComponent,
-    ClassScheduleComponent,
     TeacherScheduleManagerComponent,
     ProfileComponent,
-    AnnouncementsComponent,
     AssignmentsComponent,
     StudentsComponent
     ,RoomListComponent
     ,RoomDetailComponent
+    ,ClassChatComponent
   ],
   imports: [
     BrowserModule,
@@ -106,6 +105,7 @@ import { AuthInterceptor } from './core/interceptors/auth.interceptor';
     MatDividerModule,
     MatGridListModule,
     MatProgressBarModule,
+    MatExpansionModule,
     // Toastr
     ToastrModule.forRoot({
       timeOut: 4000,

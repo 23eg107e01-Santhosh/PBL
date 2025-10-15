@@ -13,7 +13,7 @@ const registerValidation = [
     .withMessage('Full name must be between 2 and 150 characters'),
   body('role')
     .optional()
-    .isIn(['admin', 'student', 'teacher', 'cr'])
+    .isIn(['admin', 'student', 'teacher'])
     .withMessage('Invalid role')
 ];
 
@@ -144,6 +144,39 @@ const examValidation = [
     .withMessage('Detail is required')
 ];
 
+const scheduleValidation = [
+  body('title')
+    .isLength({ min: 1, max: 150 })
+    .withMessage('Title must be between 1 and 150 characters'),
+  body('courseCode')
+    .isLength({ min: 1, max: 10 })
+    .withMessage('Course code must be between 1 and 10 characters'),
+  body('courseTitle')
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Course title must be between 1 and 100 characters'),
+  body('startDate')
+    .isISO8601()
+    .withMessage('Invalid start date format'),
+  body('endDate')
+    .isISO8601()
+    .withMessage('Invalid end date format'),
+  body('timeSlots')
+    .isArray({ min: 1 })
+    .withMessage('At least one time slot is required'),
+  body('timeSlots.*.day')
+    .isIn(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])
+    .withMessage('Invalid day'),
+  body('timeSlots.*.startTime')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Invalid start time format (HH:MM)'),
+  body('timeSlots.*.endTime')
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage('Invalid end time format (HH:MM)'),
+  body('sections')
+    .isArray({ min: 1 })
+    .withMessage('At least one section is required')
+];
+
 module.exports = {
   registerValidation,
   loginValidation,
@@ -152,5 +185,6 @@ module.exports = {
   classRoutineValidation,
   assignmentValidation,
   announcementValidation,
-  examValidation
+  examValidation,
+  scheduleValidation
 };

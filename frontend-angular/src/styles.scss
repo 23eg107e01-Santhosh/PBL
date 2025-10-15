@@ -26,6 +26,11 @@
   --shadow-md: 0 4px 10px -2px rgba(0,0,0,.55);
   --shadow-lg: 0 8px 24px -6px rgba(0,0,0,.55);
   --focus-ring: 0 0 0 3px rgba(76,110,245,.35);
+
+  /* Angular Material/MDC text tokens */
+  --mdc-theme-text-primary-on-background: #e6e9ed;
+  --mdc-theme-text-secondary-on-background: #9aa4af;
+  --mat-app-text-color: #e6e9ed;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -68,6 +73,7 @@ body { margin:0; }
     }
   }
   .mat-mdc-input-element { color: var(--color-text) !important; }
+  .mdc-floating-label { color: var(--color-text) !important; }
   .mat-mdc-form-field-hint,
   .mat-mdc-form-field-error { color: var(--color-text-muted); }
 }
@@ -89,6 +95,10 @@ body { margin:0; }
   font-weight: 600 !important;
   text-transform: none !important;
 }
+
+.mat-mdc-outlined-button .mdc-button__label,
+.mat-mdc-button .mdc-button__label,
+.mat-mdc-unelevated-button .mdc-button__label { color: var(--color-text) !important; }
 
 .mat-mdc-chip { background-color: var(--color-surface-alt) !important; color: var(--color-text) !important; font-weight:500; }
 
@@ -124,6 +134,22 @@ mat-card-subtitle, .mat-mdc-card-subtitle,
 .mat-mdc-raised-button .mdc-button__label {
   color: var(--color-text) !important;
 }
+
+/* Generic element text defaults */
+p, span, label, li, dt, dd, small, strong, em, code, pre, blockquote { color: var(--color-text) !important; }
+a { color: var(--color-text) !important; text-decoration: none; }
+a:hover { color: #fff !important; text-decoration: underline; }
+
+/* Inputs & placeholders */
+input::placeholder, textarea::placeholder { color: var(--color-text-muted) !important; opacity: 1; }
+.mat-mdc-input-element:disabled { color: var(--color-text-muted) !important; }
+
+/* Expansion panels, paginator, selects, toggles */
+.mat-expansion-panel-header-title, .mat-expansion-panel-header-description { color: var(--color-text) !important; }
+.mat-mdc-paginator, .mat-mdc-paginator .mat-mdc-paginator-range-label { color: var(--color-text) !important; }
+.mat-mdc-select-value, .mat-mdc-select-arrow { color: var(--color-text) !important; }
+.mat-mdc-slide-toggle .mdc-label, .mat-mdc-radio-button .mdc-label, .mdc-form-field label { color: var(--color-text) !important; }
+.mat-mdc-tooltip .mdc-tooltip__content { color: var(--color-text) !important; }
 
 /* Sidebar nav title and text */
 .sidenav .mat-mdc-list-item .mdc-list-item__primary-text,

@@ -70,4 +70,31 @@ const getRoom = async (req, res) => {
   }
 };
 
-module.exports = { createRoom, joinRoom, getMyRooms, getRoom };
+const deleteRoom = async (req, res) => {
+  try {
+    console.log('Delete room request:', req.params.id, 'User:', req.user._id, 'Role:', req.user.role);
+    
+    const room = await Room.findById(req.params.id);
+    if (!room) {
+      console.log('Room not found:', req.params.id);
+      return res.status(404).json({ success: false, message: 'Room not found' });
+    }
+    
+    console.log('Room found:', room.title, 'Created by:', room.createdBy);
+    
+    // Only room creator or admin can delete
+    if (room.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      console.log('Permission denied - user is not creator or admin');
+      return res.status(403).json({ success: false, message: 'You can only delete rooms you created' });
+    }
+    
+    await Room.findByIdAndDelete(req.params.id);
+    console.log('Room deleted successfully');
+    res.json({ success: true, message: 'Room deleted successfully' });
+  } catch (e) {
+    console.error('Delete room error:', e);
+    res.status(500).json({ success: false, message: 'Server error deleting room' });
+  }
+};
+
+module.exports = { createRoom, joinRoom, getMyRooms, getRoom, deleteRoom };
