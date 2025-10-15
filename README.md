@@ -52,7 +52,19 @@ export const environment = {
 ### 4. Start MongoDB
 Make sure MongoDB is running on your system.
 
-### 5. Start the Application
+### 5. Seed Demo Data (optional but recommended)
+From the `backend` folder, populate demo Departments, Sections, Students, Schedules, Assignments, and Classrooms:
+```bash
+cd backend
+npm run seed:demo
+```
+
+Demo accounts created by the seeders:
+
+- Teacher: `teacher.demo@university.edu` / `teacher123`
+- Students: `<personalId>@student.university.edu` (e.g. `cse21001@student.university.edu`) / `student123`
+
+### 6. Start the Application
 ```bash
 npm run dev
 ```
@@ -87,12 +99,21 @@ Study-collab/
 - `npm run install:all` - Install dependencies (backend + Angular)
 - `npm run build:frontend-angular` - Production build of Angular frontend
 
+### Backend seeding scripts (run from `backend/`)
+
+- `npm run seed:departments` — seed standard departments (CSE, EEE, ME, BBA, etc.)
+- `npm run seed:sections` — seed Sections A–M
+- `npm run seed:students` — seed demo students and their user accounts
+- `npm run seed:schedules` — seed demo weekly class routines
+- `npm run seed:assignments` — seed upcoming assignments
+- `npm run seed:classrooms` — seed demo classrooms and welcome posts
+- `npm run seed:demo` — run all of the above in order
+
 ## 📝 Default User Roles
 
-- **Admin**: Full system access and user management
-- **Teacher**: Create assignments, announcements, and manage classes
-- **Student**: View assignments, announcements, and manage profile
+- Teacher: Create schedules, assignments, announcements, manage classrooms
+- Student: View schedules, assignments, announcements, manage profile
 
 ---
 
-Built with using Angular, Node.js, and MongoDB
+Built with Angular, Node.js, and MongoDB
