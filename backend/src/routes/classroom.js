@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authenticate, authorize } = require('../middleware/auth');
 const { uploadFields } = require('../middleware/upload');
-const { listPosts, createPost, listAssignments, createAssignment, submitWork, gradeSubmission } = require('../controllers/classroomController');
+const { listPosts, createPost, listAssignments, createAssignment, submitWork, gradeSubmission, listSubmissions, getMySubmission } = require('../controllers/classroomController');
 
 // Stream
 router.get('/:roomId/posts', authenticate, listPosts);
@@ -11,6 +11,8 @@ router.post('/posts', authenticate, uploadFields, createPost);
 // Classwork
 router.get('/:roomId/assignments', authenticate, listAssignments);
 router.post('/assignments', authenticate, authorize('teacher'), createAssignment);
+router.get('/assignments/:assignmentId/submissions', authenticate, authorize('teacher'), listSubmissions);
+router.get('/assignments/:assignmentId/mine', authenticate, getMySubmission);
 
 // Submissions
 router.post('/submissions', authenticate, uploadFields, submitWork);

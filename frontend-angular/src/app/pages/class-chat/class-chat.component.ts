@@ -44,6 +44,8 @@ import { ChatApiService } from '../../core/services/chat-api.service';
     .content{color:#e5e7eb;}
     .content.file a{margin-right:8px;}
     .composer{display:flex;gap:8px;align-items:center;margin-top:12px;}
+    /* Ensure the attach_file icon is visible on dark background */
+    .composer button[mat-icon-button] mat-icon{color:#fff !important;}
     .composer .grow{flex:1;}
     .typing{color:#94a3b8;font-style:italic;}
   `],

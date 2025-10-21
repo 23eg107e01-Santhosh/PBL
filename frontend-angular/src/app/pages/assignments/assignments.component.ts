@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { AcademicService, AssignmentService } from '../../core/services/api.service';
+// import services used elsewhere removed for simplified UI
 import { RoomService } from '../../core/services/room.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@environments/environment';
@@ -12,173 +12,188 @@ import { AuthService } from '../../core/services/auth.service';
   template: `
     <div class="page-container">
       <h1>Assignments</h1>
-      <mat-card>
-        <mat-card-content>
-          <mat-tab-group>
-            <mat-tab label="Manage">
-              <div class="tab-wrap">
-                <form [formGroup]="createForm" (ngSubmit)="createAssignment()" class="form-row" *ngIf="canCreate">
-                  <mat-form-field appearance="fill">
-                    <mat-label>Type</mat-label>
-                    <mat-select formControlName="types">
-                      <mat-option value="Assignment">Assignment</mat-option>
-                      <mat-option value="Quiz">Quiz</mat-option>
-                      <mat-option value="Project">Project</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field appearance="fill">
-                    <mat-label>Course Code</mat-label>
-                    <input matInput formControlName="courseCode" />
-                  </mat-form-field>
-                  <mat-form-field appearance="fill" class="grow">
-                    <mat-label>Course Title</mat-label>
-                    <input matInput formControlName="courseTitle" />
-                  </mat-form-field>
-                  <mat-form-field appearance="fill" class="grow">
-                    <mat-label>Assignment Title</mat-label>
-                    <input matInput formControlName="assignmentTitle" />
-                  </mat-form-field>
-                  <mat-form-field appearance="fill" class="grow">
-                    <mat-label>Detail</mat-label>
-                    <textarea matInput formControlName="detail" rows="2"></textarea>
-                  </mat-form-field>
-                  <mat-form-field appearance="fill">
-                    <mat-label>Due Date</mat-label>
-                    <input matInput [matDatepicker]="picker" formControlName="date" />
-                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker #picker></mat-datepicker>
-                  </mat-form-field>
-                  <mat-form-field appearance="fill">
-                    <mat-label>Department</mat-label>
-                    <mat-select formControlName="department">
-                      <mat-option [value]="null">All</mat-option>
-                      <mat-option *ngFor="let d of departments" [value]="d._id">{{ d.name }} ({{ d.code }})</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field appearance="fill">
-                    <mat-label>Section</mat-label>
-                    <mat-select formControlName="section">
-                      <mat-option [value]="null">All</mat-option>
-                      <mat-option *ngFor="let s of sections" [value]="s._id">{{ s.section }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field appearance="fill">
-                    <mat-label>Intake</mat-label>
-                    <mat-select formControlName="intake">
-                      <mat-option [value]="null">All</mat-option>
-                      <mat-option *ngFor="let i of intakes" [value]="i._id">{{ i.intake }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <button mat-raised-button color="primary" type="submit" [disabled]="createForm.invalid">Create</button>
+      <div class="filters">
+        <mat-form-field appearance="fill">
+          <mat-label>Classroom</mat-label>
+          <mat-select [(ngModel)]="selectedRoomId" (selectionChange)="onRoomChange()">
+            <mat-option *ngFor="let r of myRooms" [value]="r._id">{{ r.title }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <ng-container *ngIf="isTeacher && selectedRoomId">
+        <mat-card class="create-card">
+          <mat-card-header><mat-card-title>Create assignment</mat-card-title></mat-card-header>
+          <mat-card-content>
+            <form [formGroup]="createForm" (ngSubmit)="createAssignment()" class="create-grid">
+              <mat-form-field appearance="fill" class="col-span-2">
+                <mat-label>Title</mat-label>
+                <input matInput formControlName="title" />
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="col-span-2">
+                <mat-label>Instructions (optional)</mat-label>
+                <textarea matInput formControlName="instructions" rows="2"></textarea>
+              </mat-form-field>
+              <mat-form-field appearance="fill">
+                <mat-label>Due date</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="dueDate" />
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+              <mat-form-field appearance="fill">
+                <mat-label>Total points</mat-label>
+                <input type="number" matInput formControlName="totalPoints" />
+              </mat-form-field>
+
+              <div class="questions col-span-2" formArrayName="questions">
+                <div class="q-head">Questions</div>
+                <div class="q-list">
+                  <div class="q-row" *ngFor="let q of questions.controls; let i = index" [formGroupName]="i">
+                    <mat-form-field appearance="fill" class="grow">
+                      <mat-label>Question {{i+1}}</mat-label>
+                      <textarea matInput formControlName="text" rows="2"></textarea>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="qpts">
+                      <mat-label>Points</mat-label>
+                      <input type="number" matInput formControlName="points" />
+                    </mat-form-field>
+                    <button type="button" mat-icon-button (click)="removeQuestion(i)" aria-label="Remove question"><mat-icon>delete</mat-icon></button>
+                  </div>
+                </div>
+                <button mat-stroked-button type="button" (click)="addQuestion()"><mat-icon>add</mat-icon> Add question</button>
+              </div>
+
+              <mat-form-field appearance="fill" class="col-span-2">
+                <mat-label>Assign to students</mat-label>
+                <mat-select formControlName="assignedTo" multiple [disabled]="roomMembers.length===0">
+                  <mat-option *ngFor="let m of roomMembers" [value]="m._id">{{ m.profile?.fullName || m.email }}</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="col-span-2 actions">
+                <button mat-raised-button color="primary" type="submit" [disabled]="createForm.invalid">Create</button>
+              </div>
+            </form>
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+
+      <div *ngIf="!selectedRoomId" class="muted">Select a classroom to continue.</div>
+
+      <div class="list" *ngIf="selectedRoomId">
+        <mat-list>
+          <mat-list-item *ngFor="let ca of roomAssignments">
+            <div matListItemTitle>
+              {{ ca.title }}
+              <span class="due" *ngIf="ca.dueDate">Due: {{ ca.dueDate | date:'medium' }}</span>
+              <span class="points" *ngIf="ca.totalPoints">• {{ ca.totalPoints }} pts</span>
+            </div>
+            <div matListItemLine class="detail" *ngIf="ca.instructions">{{ ca.instructions }}</div>
+
+            <!-- Student submission UI -->
+            <ng-container *ngIf="!isTeacher">
+              <div class="submission">
+                <form [formGroup]="getAnswerForm(ca._id)" (ngSubmit)="submitAnswers(ca)" class="answers-grid" *ngIf="getAnswerForm(ca._id)">
+                  <div class="a-row" *ngFor="let q of (ca.questions||[]); let i = index">
+                    <div class="qtext">Q{{i+1}}. {{ q.text }}</div>
+                    <mat-form-field appearance="fill" class="grow">
+                      <mat-label>Your answer</mat-label>
+                      <textarea matInput [formControlName]="'q_'+i" rows="2"></textarea>
+                    </mat-form-field>
+                  </div>
+                  <div class="inline">
+                    <input type="file" (change)="onSubFileFor(ca._id, $event)" />
+                    <mat-form-field appearance="fill" class="grow">
+                      <mat-label>Link URL (optional)</mat-label>
+                      <input matInput formControlName="linkUrl" />
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" type="submit">Submit</button>
+                  </div>
                 </form>
-
-                <div class="filters">
-                  <mat-form-field appearance="fill">
-                    <mat-label>Filter by type</mat-label>
-                    <mat-select [(ngModel)]="filter.type" (selectionChange)="loadAssignments()">
-                      <mat-option [value]="''">All</mat-option>
-                      <mat-option value="Assignment">Assignment</mat-option>
-                      <mat-option value="Quiz">Quiz</mat-option>
-                      <mat-option value="Project">Project</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <button mat-stroked-button (click)="resetFilters()">Reset</button>
-                </div>
-
-                <div class="list">
-                  <mat-list>
-                    <mat-list-item *ngFor="let a of assignments">
-                      <div matListItemTitle>{{ a.assignmentTitle }} <span class="muted">({{ a.types }})</span></div>
-                      <div matListItemLine>
-                        {{ a.courseCode }} — {{ a.courseTitle }}
-                        <span class="due" *ngIf="a.date">Due: {{ a.date | date:'mediumDate' }}</span>
-                      </div>
-                      <div class="detail" *ngIf="a.detail">{{ a.detail }}</div>
-                    </mat-list-item>
-                  </mat-list>
+                <div class="muted" *ngIf="mySubmissions[ca._id]?.grade !== undefined && mySubmissions[ca._id]?.grade !== null">
+                  Your grade: {{ mySubmissions[ca._id].grade }} / {{ ca.totalPoints || 100 }}
                 </div>
               </div>
-            </mat-tab>
+            </ng-container>
 
-            <mat-tab label="Classwork">
-              <div class="tab-wrap">
-                <div class="filters">
-                  <mat-form-field appearance="fill">
-                    <mat-label>Classroom</mat-label>
-                    <mat-select [(ngModel)]="selectedRoomId" (selectionChange)="loadRoomAssignments()">
-                      <mat-option *ngFor="let r of myRooms" [value]="r._id">{{ r.title }}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
-
-                <div *ngIf="roomAssignments.length === 0" class="muted">Select a classroom to view assignments.</div>
-                <div class="list" *ngIf="roomAssignments.length">
-                  <mat-list>
-                    <mat-list-item *ngFor="let ca of roomAssignments">
-                      <div matListItemTitle>
-                        {{ ca.title }}
-                        <span class="due" *ngIf="ca.dueDate">Due: {{ ca.dueDate | date:'medium' }}</span>
-                        <span class="points" *ngIf="ca.totalPoints">• {{ ca.totalPoints }} pts</span>
-                      </div>
-                      <div matListItemLine class="detail" *ngIf="ca.instructions">{{ ca.instructions }}</div>
-                      <ng-container *ngIf="!isTeacher; else gradingBlock">
-                        <form [formGroup]="subForm" (ngSubmit)="submitWork(ca._id)" class="form-row">
-                          <input type="file" (change)="onSubFile($event)" />
-                          <mat-form-field appearance="fill" class="grow">
-                            <mat-label>Link URL</mat-label>
-                            <input matInput formControlName="linkUrl" />
-                          </mat-form-field>
-                          <button mat-raised-button color="primary" type="submit">Submit</button>
-                        </form>
-                      </ng-container>
-                      <ng-template #gradingBlock>
-                        <div class="muted">Grading is available from classroom details per student submissions.</div>
-                      </ng-template>
-                    </mat-list-item>
-                  </mat-list>
+            <!-- Teacher review UI -->
+            <ng-container *ngIf="isTeacher">
+              <div class="review">
+                <button mat-stroked-button (click)="toggleReview(ca._id)">{{ reviewOpen[ca._id] ? 'Hide' : 'Review' }}</button>
+                <div class="review-panel" *ngIf="reviewOpen[ca._id]">
+                  <div class="muted" *ngIf="!submissions[ca._id]">Loading submissions...</div>
+                  <div class="sub-row" *ngFor="let s of (submissions[ca._id] || [])">
+                    <div class="s-name">{{ s.student?.profile?.fullName || s.student?.email }}</div>
+                    <div class="s-answers" *ngIf="s.answers?.length">
+                      <div class="sa" *ngFor="let a of s.answers">Q{{a.questionIndex+1}}: {{a.answer}}</div>
+                    </div>
+                    <mat-form-field appearance="fill" class="s-grade">
+                      <mat-label>Grade</mat-label>
+                      <input type="number" matInput [(ngModel)]="s._gradeTemp" [ngModelOptions]="{standalone: true}" />
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" (click)="gradeSubmission(s, s._gradeTemp)">Save</button>
+                    <span class="muted" *ngIf="s.grade !== null">Current: {{s.grade}}</span>
+                  </div>
                 </div>
               </div>
-            </mat-tab>
-          </mat-tab-group>
-        </mat-card-content>
-      </mat-card>
+            </ng-container>
+          </mat-list-item>
+        </mat-list>
+      </div>
     </div>
   `,
   styles: [`
-    .page-container { max-width: 1400px; margin: 0 auto; }
-    h1 { font-size: 2rem; font-weight: 600; color: #ffffff; margin-bottom: 24px; }
-    .tab-wrap { display: flex; flex-direction: column; gap: 16px; }
-    .form-row { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 12px; align-items: center; }
-    .form-row .grow { grid-column: span 2; }
-    .filters { display: flex; gap: 12px; align-items: center; }
-    .list { background: #1e293b; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; }
+    .page-container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 2rem; font-weight: 600; color: #ffffff; margin-bottom: 16px; }
+    .filters { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
     .muted { color: #94a3b8; }
+    .list { background: #0f172a; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; }
     .due { margin-left: 12px; color: #f59e0b; }
-    .detail { margin-top: 8px; color: #cbd5e1; }
+    .detail { margin-top: 6px; color: #cbd5e1; }
+    .create-card { margin-bottom: 16px; }
+    .create-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .col-span-2 { grid-column: span 2; }
+    .actions { display: flex; justify-content: flex-end; }
+    .questions .q-head { font-weight: 600; margin-bottom: 6px; }
+    .q-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+    .q-row { display: grid; grid-template-columns: 1fr 140px 48px; gap: 8px; align-items: center; }
+    .qpts { width: 140px; }
+    .answers-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+    .a-row { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
+    .qtext { color: #e2e8f0; }
+    .inline { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+    .review { margin-top: 8px; }
+    .review-panel { margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; }
+    .sub-row { display: grid; grid-template-columns: 1.2fr 1fr 140px auto auto; gap: 8px; align-items: center; }
+    .s-name { color: #e2e8f0; }
+    .s-answers { color: #cbd5e1; }
   `],
   standalone: false
 })
 export class AssignmentsComponent implements OnInit {
+  // Create form (teacher)
   createForm!: FormGroup;
-  assignments: any[] = [];
-  departments: any[] = [];
-  sections: any[] = [];
-  intakes: any[] = [];
-  filter: any = { type: '' };
-  canCreate = false;
+  get questions() { return this.createForm.get('questions') as FormArray; }
 
+  // Room and members
   myRooms: any[] = [];
   selectedRoomId: string = '';
+  roomMembers: any[] = [];
   roomAssignments: any[] = [];
-  subForm!: FormGroup;
+
+  // Student answers per assignment
+  answerForms: { [assignmentId: string]: FormGroup } = {};
+  mySubmissions: { [assignmentId: string]: any } = {};
+
+  // Teacher review state
+  submissions: { [assignmentId: string]: any[] } = {};
+  reviewOpen: { [assignmentId: string]: boolean } = {};
 
   isTeacher = false;
 
   constructor(
     private fb: FormBuilder,
     private toastr: ToastrService,
-    private academicApi: AcademicService,
-    private assignmentApi: AssignmentService,
     private roomApi: RoomService,
     private http: HttpClient,
     private auth: AuthService
@@ -186,47 +201,29 @@ export class AssignmentsComponent implements OnInit {
 
   ngOnInit(): void {
     this.isTeacher = this.auth.currentUserValue?.role === 'teacher';
-    this.canCreate = ['admin','teacher'].includes(this.auth.currentUserValue?.role || '');
     this.createForm = this.fb.group({
-      types: ['Assignment', Validators.required],
-      courseCode: ['', Validators.required],
-      courseTitle: ['', Validators.required],
-      assignmentTitle: ['', Validators.required],
-      detail: [''],
-      date: [null],
-      intake: [null],
-      department: [null],
-      section: [null]
+      title: ['', Validators.required],
+      instructions: [''],
+      dueDate: [null],
+      totalPoints: [100, [Validators.min(0)]],
+      questions: this.fb.array([]),
+      assignedTo: [[]]
     });
-    this.subForm = this.fb.group({ linkUrl: [''] });
-    this.loadMeta();
-    this.loadAssignments();
     this.loadMyRooms();
   }
 
-  loadMeta(): void {
-    this.academicApi.getDepartments().subscribe({ next: (res:any)=> this.departments = res?.data || res || [], error: ()=> this.toastr.error('Failed to load departments') });
-    this.academicApi.getSections().subscribe({ next: (res:any)=> this.sections = res?.data || res || [], error: ()=> this.toastr.error('Failed to load sections') });
-    this.academicApi.getIntakes().subscribe({ next: (res:any)=> this.intakes = res?.data || res || [], error: ()=> this.toastr.error('Failed to load intakes') });
-  }
-
-  loadAssignments(): void {
-    const params: any = {};
-    if (this.filter.type) params.types = this.filter.type;
-    this.assignmentApi.getAll(params).subscribe({
-      next: (res:any)=> this.assignments = res?.data?.assignments || res?.data || res || [],
-      error: ()=> this.toastr.error('Failed to load assignments')
-    });
-  }
-
-  resetFilters(): void { this.filter = { type: '' }; this.loadAssignments(); }
-
   createAssignment(): void {
-    if (this.createForm.invalid) return;
-    const payload = { ...this.createForm.value };
-    if (payload.date instanceof Date) payload.date = payload.date.toISOString();
-    this.assignmentApi.create(payload).subscribe({
-      next: (res:any)=> { const created = res?.data || res; this.assignments.unshift(created); this.toastr.success('Assignment created'); this.createForm.reset({ types: 'Assignment', courseCode: '', courseTitle: '', assignmentTitle: '', detail: '', date: null, intake: null, department: null, section: null }); },
+    if (this.createForm.invalid || !this.selectedRoomId) return;
+    const payload = { ...this.createForm.value, room: this.selectedRoomId };
+    if (payload.dueDate instanceof Date) payload.dueDate = payload.dueDate.toISOString();
+    this.http.post<any>(`${environment.apiUrl}/classroom/assignments`, payload).subscribe({
+      next: (r)=>{
+        const created = r?.data?.assignment || r?.data || r;
+        this.roomAssignments.unshift(created);
+        this.toastr.success('Assignment created');
+        this.createForm.reset({ title: '', instructions: '', dueDate: null, totalPoints: 100, questions: [], assignedTo: [] });
+        while(this.questions.length) this.questions.removeAt(0);
+      },
       error: ()=> this.toastr.error('Failed to create assignment')
     });
   }
@@ -235,12 +232,57 @@ export class AssignmentsComponent implements OnInit {
     this.roomApi.myRooms().subscribe({ next: (res:any)=> this.myRooms = res?.data?.rooms || res?.rooms || res?.data || res || [], error: ()=> {} });
   }
 
-  loadRoomAssignments(): void {
+  onRoomChange(): void {
     this.roomAssignments = [];
+    this.roomMembers = [];
     if (!this.selectedRoomId) return;
-    this.http.get<any>(`${environment.apiUrl}/classroom/${this.selectedRoomId}/assignments`).subscribe({ next: r=> this.roomAssignments = r.data?.assignments || [], error: ()=> this.toastr.error('Failed to load classwork') });
+    this.http.get<any>(`${environment.apiUrl}/classroom/${this.selectedRoomId}/assignments`).subscribe({ next: r=> {
+      this.roomAssignments = r.data?.assignments || [];
+      // Prepare answer forms for each assignment for students
+      if (!this.isTeacher) {
+        this.roomAssignments.forEach(a=> this.ensureAnswerForm(a));
+      }
+    }, error: ()=> this.toastr.error('Failed to load assignments') });
+    // Load room members for teacher selection
+    this.roomApi.get(this.selectedRoomId).subscribe({ next: (r:any)=> {
+      const room = r?.data?.room || r?.room || r;
+      const members = room?.members || [];
+      this.roomMembers = members.filter((m:any)=> m.role === 'student');
+    }, error: ()=> {} });
   }
 
-  onSubFile(ev: Event){ const input = ev.target as HTMLInputElement; const f = (input.files && input.files[0]) || null; if (f) { (this.subForm as any)._file = f; } }
-  submitWork(asgId: string){ const f = (this.subForm as any)._file as File | null; const linkUrl = this.subForm.value.linkUrl; const fd = new FormData(); fd.append('assignment', asgId); if (f) fd.append('submissionFile', f); if (linkUrl) fd.append('linkUrl', linkUrl); this.http.post<any>(`${environment.apiUrl}/classroom/submissions`, fd).subscribe({ next: ()=>{ this.toastr.success('Submitted'); this.subForm.reset(); (this.subForm as any)._file = null; }, error: ()=> this.toastr.error('Submission failed') }); }
+  addQuestion(): void { this.questions.push(this.fb.group({ text: ['', Validators.required], points: [0] })); }
+  removeQuestion(i: number): void { this.questions.removeAt(i); }
+
+  ensureAnswerForm(asg: any): void {
+    if (this.answerForms[asg._id]) return;
+    const g: any = { linkUrl: [''] };
+    (asg.questions || []).forEach((q:any, idx:number)=> g['q_'+idx] = ['']);
+    this.answerForms[asg._id] = this.fb.group(g);
+    this.fetchMySubmission(asg._id);
+  }
+  getAnswerForm(id: string): FormGroup { return this.answerForms[id]; }
+  onSubFileFor(id: string, ev: Event){ const input = ev.target as HTMLInputElement; const f = (input.files && input.files[0]) || null; if (f) { (this.answerForms[id] as any)._file = f; } }
+  submitAnswers(asg: any){
+    const form = this.answerForms[asg._id]; if (!form) return;
+    const answers = (asg.questions || []).map((_:any, i:number)=> ({ questionIndex: i, answer: form.value['q_'+i] || '' }));
+    const fd = new FormData();
+    fd.append('assignment', asg._id);
+    fd.append('answers', JSON.stringify(answers));
+    const f = (form as any)._file as File | null; if (f) fd.append('submissionFile', f);
+    const linkUrl = form.value.linkUrl; if (linkUrl) fd.append('linkUrl', linkUrl);
+    this.http.post<any>(`${environment.apiUrl}/classroom/submissions`, fd).subscribe({ next: (r)=>{ this.toastr.success('Submitted'); this.mySubmissions[asg._id] = r?.data?.submission || {}; }, error: ()=> this.toastr.error('Submission failed') });
+  }
+
+  fetchMySubmission(asgId: string){ this.http.get<any>(`${environment.apiUrl}/classroom/assignments/${asgId}/mine`).subscribe({ next: r=> this.mySubmissions[asgId] = r?.data?.submission || {}, error: ()=> {} }); }
+
+  toggleReview(asgId: string){
+    this.reviewOpen[asgId] = !this.reviewOpen[asgId];
+    if (this.reviewOpen[asgId] && !this.submissions[asgId]) {
+      this.http.get<any>(`${environment.apiUrl}/classroom/assignments/${asgId}/submissions`).subscribe({ next: r=> this.submissions[asgId] = r?.data?.submissions || [], error: ()=> this.toastr.error('Failed to load submissions') });
+    }
+  }
+  gradeSubmission(sub: any, grade: number){
+    this.http.post<any>(`${environment.apiUrl}/classroom/submissions/${sub._id}/grade`, { grade }).subscribe({ next: r=> { sub.grade = r?.data?.submission?.grade; this.toastr.success('Grade saved'); }, error: ()=> this.toastr.error('Failed to save grade') });
+  }
 }
