@@ -53,6 +53,10 @@ import { AuthService } from '../../core/services/auth.service';
                       <mat-label>Question {{i+1}}</mat-label>
                       <textarea matInput formControlName="text" rows="2"></textarea>
                     </mat-form-field>
+                    <mat-form-field appearance="fill" class="grow">
+                      <mat-label>Correct answer</mat-label>
+                      <input matInput formControlName="correctAnswer" />
+                    </mat-form-field>
                     <mat-form-field appearance="fill" class="qpts">
                       <mat-label>Points</mat-label>
                       <input type="number" matInput formControlName="points" />
@@ -88,11 +92,21 @@ import { AuthService } from '../../core/services/auth.service';
               <span class="due" *ngIf="ca.dueDate">Due: {{ ca.dueDate | date:'medium' }}</span>
               <span class="points" *ngIf="ca.totalPoints">• {{ ca.totalPoints }} pts</span>
             </div>
+            <div matListItemMeta *ngIf="isTeacher">
+              <button mat-icon-button color="warn" (click)="deleteAsg(ca)" aria-label="Delete assignment">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+            <div matListItemMeta *ngIf="!isTeacher">
+              <button mat-raised-button color="primary" (click)="toggleAttempt(ca)">{{ attemptOpen[ca._id] ? 'Hide' : 'Attempt' }}</button>
+            </div>
             <div matListItemLine class="detail" *ngIf="ca.instructions">{{ ca.instructions }}</div>
 
             <!-- Student submission UI -->
             <ng-container *ngIf="!isTeacher">
               <div class="submission">
+                <button mat-stroked-button type="button" (click)="toggleAttempt(ca)">{{ attemptOpen[ca._id] ? 'Hide' : 'Attempt' }}</button>
+                <div class="attempt-area" *ngIf="attemptOpen[ca._id]">
                 <form [formGroup]="getAnswerForm(ca._id)" (ngSubmit)="submitAnswers(ca)" class="answers-grid" *ngIf="getAnswerForm(ca._id)">
                   <div class="a-row" *ngFor="let q of (ca.questions||[]); let i = index">
                     <div class="qtext">Q{{i+1}}. {{ q.text }}</div>
@@ -101,15 +115,17 @@ import { AuthService } from '../../core/services/auth.service';
                       <textarea matInput [formControlName]="'q_'+i" rows="2"></textarea>
                     </mat-form-field>
                   </div>
-                  <div class="inline">
-                    <input type="file" (change)="onSubFileFor(ca._id, $event)" />
+                  <div class="a-row" *ngIf="(ca.questions||[]).length === 0">
                     <mat-form-field appearance="fill" class="grow">
-                      <mat-label>Link URL (optional)</mat-label>
-                      <input matInput formControlName="linkUrl" />
+                      <mat-label>Your answer</mat-label>
+                      <textarea matInput formControlName="q_0" rows="3"></textarea>
                     </mat-form-field>
-                    <button mat-raised-button color="primary" type="submit">Submit</button>
+                  </div>
+                  <div class="inline">
+                    <button mat-raised-button color="primary" type="submit">Submit assignment</button>
                   </div>
                 </form>
+                </div>
                 <div class="muted" *ngIf="mySubmissions[ca._id]?.grade !== undefined && mySubmissions[ca._id]?.grade !== null">
                   Your grade: {{ mySubmissions[ca._id].grade }} / {{ ca.totalPoints || 100 }}
                 </div>
@@ -119,7 +135,10 @@ import { AuthService } from '../../core/services/auth.service';
             <!-- Teacher review UI -->
             <ng-container *ngIf="isTeacher">
               <div class="review">
-                <button mat-stroked-button (click)="toggleReview(ca._id)">{{ reviewOpen[ca._id] ? 'Hide' : 'Review' }}</button>
+                <div class="actions-row">
+                  <button mat-raised-button color="primary" (click)="toggleReview(ca._id)">{{ reviewOpen[ca._id] ? 'Hide' : 'Review' }}</button>
+                  <button mat-raised-button color="warn" (click)="deleteAsg(ca)">Delete</button>
+                </div>
                 <div class="review-panel" *ngIf="reviewOpen[ca._id]">
                   <div class="muted" *ngIf="!submissions[ca._id]">Loading submissions...</div>
                   <div class="sub-row" *ngFor="let s of (submissions[ca._id] || [])">
@@ -156,17 +175,22 @@ import { AuthService } from '../../core/services/auth.service';
     .actions { display: flex; justify-content: flex-end; }
     .questions .q-head { font-weight: 600; margin-bottom: 6px; }
     .q-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-    .q-row { display: grid; grid-template-columns: 1fr 140px 48px; gap: 8px; align-items: center; }
-    .qpts { width: 140px; }
+  .q-row { display: grid; grid-template-columns: 1fr 1fr 120px 48px; gap: 8px; align-items: center; }
+  .qpts { width: 120px; }
     .answers-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
     .a-row { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; }
     .qtext { color: #e2e8f0; }
-    .inline { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; }
+  .inline { display: grid; grid-template-columns: auto; gap: 8px; align-items: center; }
     .review { margin-top: 8px; }
+  .actions-row { display: flex; gap: 8px; margin-top: 8px; }
     .review-panel { margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 8px; }
     .sub-row { display: grid; grid-template-columns: 1.2fr 1fr 140px auto auto; gap: 8px; align-items: center; }
     .s-name { color: #e2e8f0; }
     .s-answers { color: #cbd5e1; }
+    .mat-mdc-list-item .mdc-list-item__end { display: flex; align-items: center; gap: 8px; }
+    /* Make list items expand to show attempt form */
+    .mat-mdc-list-item.mdc-list-item { height: auto !important; align-items: flex-start !important; }
+    .attempt-area { margin-top: 8px; width: 100%; }
   `],
   standalone: false
 })
@@ -184,6 +208,7 @@ export class AssignmentsComponent implements OnInit {
   // Student answers per assignment
   answerForms: { [assignmentId: string]: FormGroup } = {};
   mySubmissions: { [assignmentId: string]: any } = {};
+  attemptOpen: { [assignmentId: string]: boolean } = {};
 
   // Teacher review state
   submissions: { [assignmentId: string]: any[] } = {};
@@ -251,27 +276,23 @@ export class AssignmentsComponent implements OnInit {
     }, error: ()=> {} });
   }
 
-  addQuestion(): void { this.questions.push(this.fb.group({ text: ['', Validators.required], points: [0] })); }
+  addQuestion(): void { this.questions.push(this.fb.group({ text: ['', Validators.required], correctAnswer: [''], points: [0] })); }
   removeQuestion(i: number): void { this.questions.removeAt(i); }
 
   ensureAnswerForm(asg: any): void {
     if (this.answerForms[asg._id]) return;
-    const g: any = { linkUrl: [''] };
+    const g: any = {};
     (asg.questions || []).forEach((q:any, idx:number)=> g['q_'+idx] = ['']);
+    if ((asg.questions || []).length === 0) { g['q_0'] = ['']; }
     this.answerForms[asg._id] = this.fb.group(g);
     this.fetchMySubmission(asg._id);
   }
+  toggleAttempt(asg: any){ const id = asg && asg._id ? asg._id : asg; this.attemptOpen[id] = !this.attemptOpen[id]; if (this.attemptOpen[id]) { this.ensureAnswerForm(asg); if (!this.answerForms[id]) { this.answerForms[id] = this.fb.group({ q_0: [''] }); } } }
   getAnswerForm(id: string): FormGroup { return this.answerForms[id]; }
-  onSubFileFor(id: string, ev: Event){ const input = ev.target as HTMLInputElement; const f = (input.files && input.files[0]) || null; if (f) { (this.answerForms[id] as any)._file = f; } }
   submitAnswers(asg: any){
     const form = this.answerForms[asg._id]; if (!form) return;
     const answers = (asg.questions || []).map((_:any, i:number)=> ({ questionIndex: i, answer: form.value['q_'+i] || '' }));
-    const fd = new FormData();
-    fd.append('assignment', asg._id);
-    fd.append('answers', JSON.stringify(answers));
-    const f = (form as any)._file as File | null; if (f) fd.append('submissionFile', f);
-    const linkUrl = form.value.linkUrl; if (linkUrl) fd.append('linkUrl', linkUrl);
-    this.http.post<any>(`${environment.apiUrl}/classroom/submissions`, fd).subscribe({ next: (r)=>{ this.toastr.success('Submitted'); this.mySubmissions[asg._id] = r?.data?.submission || {}; }, error: ()=> this.toastr.error('Submission failed') });
+    this.http.post<any>(`${environment.apiUrl}/classroom/submissions`, { assignment: asg._id, answers }).subscribe({ next: (r)=>{ this.toastr.success('Submitted'); this.mySubmissions[asg._id] = r?.data?.submission || {}; }, error: ()=> this.toastr.error('Submission failed') });
   }
 
   fetchMySubmission(asgId: string){ this.http.get<any>(`${environment.apiUrl}/classroom/assignments/${asgId}/mine`).subscribe({ next: r=> this.mySubmissions[asgId] = r?.data?.submission || {}, error: ()=> {} }); }
@@ -284,5 +305,14 @@ export class AssignmentsComponent implements OnInit {
   }
   gradeSubmission(sub: any, grade: number){
     this.http.post<any>(`${environment.apiUrl}/classroom/submissions/${sub._id}/grade`, { grade }).subscribe({ next: r=> { sub.grade = r?.data?.submission?.grade; this.toastr.success('Grade saved'); }, error: ()=> this.toastr.error('Failed to save grade') });
+  }
+
+  deleteAsg(ca: any){
+    if (!confirm('Delete this assignment? This will remove all submissions.')) return;
+    this.http.delete<any>(`${environment.apiUrl}/classroom/assignments/${ca._id}`).subscribe({ next: ()=>{
+      this.roomAssignments = this.roomAssignments.filter(a=> a._id !== ca._id);
+      delete this.submissions[ca._id];
+      this.toastr.success('Assignment deleted');
+    }, error: ()=> this.toastr.error('Failed to delete assignment') });
   }
 }

@@ -106,23 +106,14 @@ import { environment } from '@environments/environment';
           </div>
         </mat-tab>
         <mat-tab label="Chat">
-          <div class="tab-content chat">
-            <div class="messages">
-              <div class="msg" *ngFor="let m of messages">{{ m.sender?.email || m.sender }}: {{ m.message }}</div>
-            </div>
-            <form [formGroup]="chatForm" (ngSubmit)="send()" class="chat-form">
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Message</mat-label>
-                <input matInput formControlName="text" />
-              </mat-form-field>
-              <button mat-raised-button color="primary" type="submit">Send</button>
-            </form>
+          <div class="tab-content">
+            <app-class-chat></app-class-chat>
           </div>
         </mat-tab>
       </mat-tab-group>
     </div>
   `,
-  styles: [`.room-header{display:flex; align-items:center; justify-content:space-between;} .online{display:flex; gap:8px; align-items:center;} .chip{background:#2a2f36; padding:4px 8px; border-radius:999px;} .res-form{display:flex; gap:12px; align-items:center; margin-bottom:12px;} .chat{display:flex; flex-direction:column; gap:12px;} .messages{height:300px; overflow:auto; background:#1c1f24; padding:8px; border-radius:8px;} .msg{margin:4px 0;}`],
+  styles: [`.room-header{display:flex; align-items:center; justify-content:space-between;} .online{display:flex; gap:8px; align-items:center;} .chip{background:#2a2f36; padding:4px 8px; border-radius:999px;} .res-form{display:flex; gap:12px; align-items:center; margin-bottom:12px;}`],
   standalone: false
 })
 export class RoomDetailComponent implements OnInit, OnDestroy {
@@ -131,12 +122,9 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   resources: any[] = [];
   file: File | null = null;
   resForm!: FormGroup;
-  chatForm!: FormGroup;
   postForm!: FormGroup;
   asgForm!: FormGroup;
   subForm!: FormGroup;
-  messages: any[] = [];
-  sub?: Subscription;
   onlineUsers = new Set<string>();
   posts: any[] = [];
   assignments: any[] = [];
@@ -147,11 +135,10 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   constructor(private route: ActivatedRoute, private resApi: ResourceService, private chat: ChatService, private chatApi: ChatApiService, private fb: FormBuilder, private auth: AuthService, private http: HttpClient) {}
   ngOnInit(): void {
     this.roomId = this.route.snapshot.paramMap.get('id')!;
-  this.resForm = this.fb.group({ linkUrl: [''] });
-    this.chatForm = this.fb.group({ text: ['', Validators.required] });
-  this.postForm = this.fb.group({ text: ['', [Validators.required, Validators.maxLength(2000)]] });
-  this.asgForm = this.fb.group({ title: ['', Validators.required], instructions: [''] });
-  this.subForm = this.fb.group({ linkUrl: [''] });
+    this.resForm = this.fb.group({ linkUrl: [''] });
+    this.postForm = this.fb.group({ text: ['', [Validators.required, Validators.maxLength(2000)]] });
+    this.asgForm = this.fb.group({ title: ['', Validators.required], instructions: [''] });
+    this.subForm = this.fb.group({ linkUrl: [''] });
   this.isTeacher = this.auth.currentUserValue?.role === 'teacher';
     this.loadResources();
     // Fetch room info for title
@@ -162,24 +149,22 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
       this.teacher = teacher;
       this.classmates = (room?.members || []).filter((m:any)=> m.role!=='teacher');
     });
-    // Fetch chat history via API service
-  this.chatApi.history(this.roomId).subscribe(r => { this.messages = r.data?.messages || []; });
+    // Chat UI handled by app-class-chat within this tab.
   // Stream posts
   this.http.get<any>(`${environment.apiUrl}/classroom/${this.roomId}/posts`).subscribe(r=> this.posts = r.data?.posts || []);
   // Assignments
   this.http.get<any>(`${environment.apiUrl}/classroom/${this.roomId}/assignments`).subscribe(r=> this.assignments = r.data?.assignments || []);
     const userId = this.auth.currentUserValue?.id as string;
     this.chat.joinRoom(this.roomId, userId);
-    this.sub = this.chat.onMessage().subscribe(m => { if (m.chatRoom === this.roomId) this.messages.push(m); });
     // Track roster via socket events
     (this.chat as any).socket?.on('userJoined', (e:any)=>{ if (e && e.userId) this.onlineUsers.add(e.userId); });
     (this.chat as any).socket?.on('userLeft', (e:any)=>{ if (e && e.userId) this.onlineUsers.delete(e.userId); });
   }
-  ngOnDestroy(): void { this.sub?.unsubscribe(); }
+  ngOnDestroy(): void {}
   loadResources(){ this.resApi.list(this.roomId).subscribe(res => this.resources = res.data?.resources || []); }
   onFile(ev: Event){ const input = ev.target as HTMLInputElement; this.file = (input.files && input.files[0]) || null; }
   upload(){ this.resApi.upload(this.roomId, this.file || undefined, this.resForm.value.linkUrl || undefined).subscribe(()=>{ this.resForm.reset(); this.file = null; this.loadResources(); }); }
-  send(){ if (this.chatForm.invalid) return; const text = this.chatForm.value.text; const userId = this.auth.currentUserValue?.id as string; this.chat.sendMessage(this.roomId, userId, text); this.chatForm.reset(); }
+  
   createPost(){ if (this.postForm.invalid) return; const fd = new FormData(); fd.append('room', this.roomId); fd.append('text', this.postForm.value.text); this.http.post<any>(`${environment.apiUrl}/classroom/posts`, fd).subscribe(r=>{ this.posts.unshift(r.data?.post); this.postForm.reset(); }); }
   createAssignment(){ if (this.asgForm.invalid) return; const payload = { room: this.roomId, ...this.asgForm.value }; this.http.post<any>(`${environment.apiUrl}/classroom/assignments`, payload).subscribe(r=>{ this.assignments.unshift(r.data?.assignment); this.asgForm.reset(); }); }
   onSubFile(ev: Event){ const input = ev.target as HTMLInputElement; const f = (input.files && input.files[0]) || null; if (f) { (this.subForm as any)._file = f; } }

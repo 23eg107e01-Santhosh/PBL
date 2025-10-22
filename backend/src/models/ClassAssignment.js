@@ -7,6 +7,8 @@ const classAssignmentSchema = new mongoose.Schema({
   // Optional list of questions; simple structure for Q&A style assignments
   questions: [{
     text: { type: String, required: true, maxlength: 1000 },
+    // Optional correct answer (simple text match for auto-grading; teacher can override later)
+    correctAnswer: { type: String, default: '' },
     points: { type: Number, default: 0 }
   }],
   // Optional explicit assignees. If empty or undefined, visible to all room members

@@ -52,9 +52,13 @@ const listAssignments = async (req, res) => {
 };
 const createAssignment = async (req, res) => {
   try {
-    const { room, title, instructions, dueDate, totalPoints, questions, assignedTo } = req.body;
+  const { room, title, instructions, dueDate, totalPoints, questions, assignedTo } = req.body;
     // Sanitize questions and assignees
-    const qs = Array.isArray(questions) ? questions.filter(q => q && q.text).map((q) => ({ text: String(q.text), points: Number(q.points || 0) })) : [];
+    const qs = Array.isArray(questions)
+      ? questions
+          .filter(q => q && q.text)
+          .map((q) => ({ text: String(q.text), correctAnswer: String(q.correctAnswer || ''), points: Number(q.points || 0) }))
+      : [];
     let assignees = Array.isArray(assignedTo) ? assignedTo : [];
     // Ensure assignees are room members
     if (assignees.length) {
@@ -74,7 +78,7 @@ const createAssignment = async (req, res) => {
 // Submissions
 const submitWork = async (req, res) => {
   try {
-    const { assignment, linkUrl, text, answers } = req.body;
+  const { assignment, linkUrl, text, answers } = req.body;
     // Check permission: if assignment has assignedTo, ensure current user is allowed
     const asg = await ClassAssignment.findById(assignment).select('assignedTo');
     if (!asg) return res.status(404).json({ success: false, message: 'Assignment not found' });
@@ -97,9 +101,30 @@ const submitWork = async (req, res) => {
           .map((a, i) => ({ questionIndex: Number(a.questionIndex ?? i), answer: String(a.answer) }));
       } catch(_) { parsedAnswers = []; }
     }
+    // Auto-grade if correct answers exist
+    let computedGrade = null;
+    try {
+      const fullAsg = await ClassAssignment.findById(assignment).select('questions totalPoints');
+      if (fullAsg && Array.isArray(fullAsg.questions) && fullAsg.questions.length) {
+        const sumPoints = fullAsg.questions.reduce((acc, q) => acc + Number(q.points || 0), 0);
+        const total = Number(fullAsg.totalPoints || sumPoints || 100);
+        let score = 0;
+        for (const ans of parsedAnswers) {
+          const q = fullAsg.questions[ans.questionIndex];
+          if (!q) continue;
+          const corr = (q.correctAnswer || '').toString().trim().toLowerCase();
+          const got = (ans.answer || '').toString().trim().toLowerCase();
+          if (corr && got && corr === got) {
+            score += Number(q.points || 0);
+          }
+        }
+        computedGrade = Math.max(0, Math.min(score, total));
+      }
+    } catch(_) {}
+
     const sub = await Submission.findOneAndUpdate(
       { assignment, student: req.user._id },
-      { assignment, student: req.user._id, linkUrl: linkUrl || '', text: text || '', fileUrl, answers: parsedAnswers },
+      { assignment, student: req.user._id, linkUrl: linkUrl || '', text: text || '', fileUrl, answers: parsedAnswers, ...(computedGrade !== null ? { grade: computedGrade } : {}) },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
     res.status(201).json({ success: true, data: { submission: sub } });
@@ -147,3 +172,23 @@ const getMySubmission = async (req, res) => {
 };
 
 module.exports = { listPosts, createPost, listAssignments, createAssignment, submitWork, gradeSubmission, listSubmissions, getMySubmission };
+ 
+// Delete an assignment (teacher who created it)
+const deleteAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const asg = await ClassAssignment.findById(id).select('createdBy');
+    if (!asg) return res.status(404).json({ success: false, message: 'Assignment not found' });
+    if (String(asg.createdBy) !== String(req.user._id) && req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only the creator can delete this assignment' });
+    }
+    await Submission.deleteMany({ assignment: id });
+    await ClassAssignment.findByIdAndDelete(id);
+    res.json({ success: true, message: 'Assignment deleted' });
+  } catch (e) {
+    console.error('Delete assignment error:', e);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
+
+module.exports.deleteAssignment = deleteAssignment;
