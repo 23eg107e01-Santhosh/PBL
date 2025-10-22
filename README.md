@@ -13,7 +13,7 @@ A modern, full-stack class management system now using **Angular** for the front
 
 ## 🛠️ Tech Stack
 
-**Frontend:** Angular 19, Angular Material, RxJS, NGX-Toastr, Date-fns  
+**Frontend:** Angular 19, Angular Material 
 **Backend:** Node.js, Express.js, MongoDB, JWT Authentication, Multer
 
 ## 🚀 Quick Start
