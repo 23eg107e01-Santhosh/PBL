@@ -7,14 +7,15 @@ import { environment } from '@environments/environment';
 export class ResourceService {
   private api = `${environment.apiUrl}`;
   constructor(private http: HttpClient) {}
-  upload(roomId: string, file?: File, linkUrl?: string): Observable<any> {
+  upload(roomId: string, file?: File, linkUrl?: string, description?: string): Observable<any> {
     if (file) {
       const fd = new FormData();
       fd.append('roomId', roomId);
       fd.append('resourceFile', file);
+      if (description) fd.append('description', description);
       return this.http.post(`${this.api}/resources/upload`, fd);
     }
-    return this.http.post(`${this.api}/resources/upload`, { roomId, linkUrl });
+    return this.http.post(`${this.api}/resources/upload`, { roomId, linkUrl, description });
   }
   list(roomId: string): Observable<any> {
     return this.http.get(`${this.api}/resources/${roomId}`);

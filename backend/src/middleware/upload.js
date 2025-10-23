@@ -1,11 +1,12 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 // Storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let uploadPath = 'uploads/';
-    
+
     if (file.fieldname === 'profileImage') {
       uploadPath += 'profiles/';
     } else if (file.fieldname === 'resourceFile') {
@@ -19,7 +20,14 @@ const storage = multer.diskStorage({
     } else {
       uploadPath += 'others/';
     }
-    
+
+    // Ensure directory exists
+    try {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    } catch (e) {
+      console.error('Failed to ensure upload path:', uploadPath, e);
+    }
+
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
@@ -30,13 +38,11 @@ const storage = multer.diskStorage({
 
 // File filter
 const fileFilter = (req, file, cb) => {
-  // Define allowed file types
-  const allowedImageTypes = /jpeg|jpg|png|gif/;
-  const allowedDocTypes = /pdf|doc|docx|txt/;
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt/;
-  
+  // Define allowed file types (images + common docs, incl. ppt/pptx)
+  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt|ppt|pptx/;
+
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = file.mimetype.match(/^(image|application)\/(jpeg|jpg|png|gif|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|plain)$/);
+  const mimetype = file.mimetype.match(/^(image|application)\/(jpeg|jpg|png|gif|pdf|msword|vnd\.openxmlformats-officedocument\.wordprocessingml\.document|plain|vnd\.ms-powerpoint|vnd\.openxmlformats-officedocument\.presentationml\.presentation)$/);
   
   if (extname && mimetype) {
     return cb(null, true);

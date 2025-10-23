@@ -140,6 +140,29 @@ p, span, label, li, dt, dd, small, strong, em, code, pre, blockquote { color: va
 a { color: var(--color-text) !important; text-decoration: none; }
 a:hover { color: #fff !important; text-decoration: underline; }
 
+/* File input: make text and button visible on dark background */
+input[type="file"] {
+  color: var(--color-text) !important; /* affects the "No file chosen" text */
+}
+/* Modern browsers */
+input[type="file"]::file-selector-button {
+  background: var(--color-surface-alt);
+  color: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+/* Safari/older Chromium fallback */
+input[type="file"]::-webkit-file-upload-button {
+  background: var(--color-surface-alt);
+  color: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
 /* Inputs & placeholders */
 input::placeholder, textarea::placeholder { color: var(--color-text-muted) !important; opacity: 1; }
 .mat-mdc-input-element:disabled { color: var(--color-text-muted) !important; }

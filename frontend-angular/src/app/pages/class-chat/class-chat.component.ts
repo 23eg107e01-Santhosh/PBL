@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { environment } from '@environments/environment';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ChatService } from '../../core/services/chat.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -17,8 +18,8 @@ import { ChatApiService } from '../../core/services/chat-api.service';
           </div>
           <div class="content" *ngIf="m.messageType !== 'file'">{{ m.message }}</div>
           <div class="content file" *ngIf="m.messageType === 'file'">
-            <a [href]="m.fileUrl" target="_blank">{{ m.fileName || 'Attachment' }}</a>
-            <a mat-stroked-button color="primary" [href]="m.fileUrl" download>Download</a>
+            <a [href]="abs(m.fileUrl)" target="_blank">{{ m.fileName || 'Attachment' }}</a>
+            <a mat-stroked-button color="primary" [href]="abs(m.fileUrl)" download>Download</a>
           </div>
         </div>
         <div class="typing" *ngIf="typingUsers.size">Someone is typing...</div>
@@ -60,6 +61,7 @@ export class ClassChatComponent implements OnInit, OnDestroy {
   typingUsers = new Set<string>();
   typingTimeout: any = null;
   @ViewChild('scrollArea') scrollArea!: ElementRef<HTMLDivElement>;
+  private apiBase = environment.apiUrl.replace(/\/api$/, '');
 
   constructor(private route: ActivatedRoute, private fb: FormBuilder, private chat: ChatService, private auth: AuthService, private chatApi: ChatApiService) {}
 
@@ -133,5 +135,6 @@ export class ClassChatComponent implements OnInit, OnDestroy {
       this.form.reset();
     }
   }
+  abs(url: string){ if (!url) return ''; if (/^https?:\/\//i.test(url)) return url; if (url.startsWith('/')) return this.apiBase + url; return this.apiBase + '/' + url; }
 }
 

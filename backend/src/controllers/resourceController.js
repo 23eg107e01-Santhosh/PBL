@@ -2,7 +2,7 @@ const { Resource } = require('../models');
 
 const uploadResource = async (req, res) => {
   try {
-    const { roomId, linkUrl } = req.body;
+    const { roomId, linkUrl, description } = req.body;
     const files = req.files || {};
 
     let resource;
@@ -13,14 +13,16 @@ const uploadResource = async (req, res) => {
         uploadedBy: req.user._id,
         type: 'file',
         fileUrl: `/uploads/resources/${f.filename}`,
-        fileName: f.originalname
+        fileName: f.originalname,
+        description: description || ''
       });
     } else if (linkUrl) {
       resource = await Resource.create({
         room: roomId,
         uploadedBy: req.user._id,
         type: 'link',
-        linkUrl
+        linkUrl,
+        description: description || ''
       });
     } else {
       return res.status(400).json({ success: false, message: 'No file or link provided' });

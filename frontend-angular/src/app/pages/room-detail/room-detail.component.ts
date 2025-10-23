@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { ResourceService } from '../../core/services/resource.service';
 import { ChatService } from '../../core/services/chat.service';
@@ -32,7 +33,7 @@ import { environment } from '@environments/environment';
                 <div matListItemTitle>{{ p.author?.email || 'Someone' }}</div>
                 <div matListItemLine>{{ p.text }}</div>
                 <div *ngIf="p.attachments?.length">
-                  <a *ngFor="let a of p.attachments" [href]="a.fileUrl" target="_blank">{{ a.fileName }}</a>
+                  <a *ngFor="let a of p.attachments" [href]="abs(a.fileUrl)" target="_blank">{{ a.fileName }}</a>
                 </div>
               </mat-list-item>
             </mat-list>
@@ -42,17 +43,24 @@ import { environment } from '@environments/environment';
           <div class="tab-content">
             <form [formGroup]="resForm" (ngSubmit)="upload()" class="res-form">
               <input type="file" (change)="onFile($event)" />
-              <mat-form-field appearance="outline">
-                <mat-label>Link URL</mat-label>
-                <input matInput formControlName="linkUrl" />
+              <mat-form-field appearance="outline" class="desc">
+                <mat-label>Description (optional)</mat-label>
+                <input matInput formControlName="description" />
               </mat-form-field>
               <button mat-raised-button color="primary" type="submit">Add</button>
             </form>
             <mat-list>
-              <mat-list-item *ngFor="let it of resources">
-                <a *ngIf="it.type==='file'" [href]="it.fileUrl" target="_blank">{{ it.fileName || it.fileUrl }}</a>
-                <a *ngIf="it.type==='link'" [href]="it.linkUrl" target="_blank">{{ it.linkUrl }}</a>
+              <ng-container *ngFor="let it of resources">
+              <mat-list-item (click)="openResource(it)" class="resource-item" *ngIf="it.type==='file'">
+                <div matListItemTitle class="r-title">{{ it.description || it.fileName }}</div>
+                <div matListItemLine class="r-preview" *ngIf="isImage(it.fileUrl)">
+                  <img [src]="abs(it.fileUrl)" alt="preview" class="preview-img" />
+                </div>
+                <div matListItemLine class="r-preview" *ngIf="isPdf(it.fileUrl)">
+                  <iframe [src]="trustSrc(it.fileUrl)" class="preview-frame"></iframe>
+                </div>
               </mat-list-item>
+              </ng-container>
             </mat-list>
           </div>
         </mat-tab>
@@ -113,7 +121,7 @@ import { environment } from '@environments/environment';
       </mat-tab-group>
     </div>
   `,
-  styles: [`.room-header{display:flex; align-items:center; justify-content:space-between;} .online{display:flex; gap:8px; align-items:center;} .chip{background:#2a2f36; padding:4px 8px; border-radius:999px;} .res-form{display:flex; gap:12px; align-items:center; margin-bottom:12px;}`],
+  styles: [`.room-header{display:flex; align-items:center; justify-content:space-between;} .online{display:flex; gap:8px; align-items:center;} .chip{background:#2a2f36; padding:4px 8px; border-radius:999px;} .res-form{display:flex; gap:12px; align-items:center; margin-bottom:12px;} .desc{min-width:260px;} .r-title{color:#fff;} .resource-item{cursor:pointer;} .r-preview{margin-top:6px;} .preview-img{max-width:320px; border-radius:6px; border:1px solid rgba(255,255,255,.08);} .preview-frame{width:100%; max-width:640px; height:360px; border:none; border-radius:6px; overflow:hidden;}`],
   standalone: false
 })
 export class RoomDetailComponent implements OnInit, OnDestroy {
@@ -131,11 +139,12 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   isTeacher = false;
   teacher: any = null;
   classmates: any[] = [];
+  private apiBase = environment.apiUrl.replace(/\/api$/, '');
 
-  constructor(private route: ActivatedRoute, private resApi: ResourceService, private chat: ChatService, private chatApi: ChatApiService, private fb: FormBuilder, private auth: AuthService, private http: HttpClient) {}
+  constructor(private route: ActivatedRoute, private resApi: ResourceService, private chat: ChatService, private chatApi: ChatApiService, private fb: FormBuilder, private auth: AuthService, private http: HttpClient, private sanitizer: DomSanitizer) {}
   ngOnInit(): void {
     this.roomId = this.route.snapshot.paramMap.get('id')!;
-    this.resForm = this.fb.group({ linkUrl: [''] });
+  this.resForm = this.fb.group({ description: [''] });
     this.postForm = this.fb.group({ text: ['', [Validators.required, Validators.maxLength(2000)]] });
     this.asgForm = this.fb.group({ title: ['', Validators.required], instructions: [''] });
     this.subForm = this.fb.group({ linkUrl: [''] });
@@ -163,7 +172,12 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {}
   loadResources(){ this.resApi.list(this.roomId).subscribe(res => this.resources = res.data?.resources || []); }
   onFile(ev: Event){ const input = ev.target as HTMLInputElement; this.file = (input.files && input.files[0]) || null; }
-  upload(){ this.resApi.upload(this.roomId, this.file || undefined, this.resForm.value.linkUrl || undefined).subscribe(()=>{ this.resForm.reset(); this.file = null; this.loadResources(); }); }
+  upload(){ this.resApi.upload(this.roomId, this.file || undefined, undefined, this.resForm.value.description || undefined).subscribe(()=>{ this.resForm.reset(); this.file = null; this.loadResources(); }); }
+  openResource(it: any){ if (it?.fileUrl) { window.open(this.abs(it.fileUrl), '_blank'); } }
+  isImage(url: string){ return /\.(png|jpg|jpeg|gif|webp|bmp)$/i.test(url || ''); }
+  isPdf(url: string){ return /\.pdf$/i.test(url || ''); }
+  abs(url: string){ if (!url) return ''; if (/^https?:\/\//i.test(url)) return url; if (url.startsWith('/')) return this.apiBase + url; return this.apiBase + '/' + url; }
+  trustSrc(url: string): SafeResourceUrl { return this.sanitizer.bypassSecurityTrustResourceUrl(this.abs(url)); }
   
   createPost(){ if (this.postForm.invalid) return; const fd = new FormData(); fd.append('room', this.roomId); fd.append('text', this.postForm.value.text); this.http.post<any>(`${environment.apiUrl}/classroom/posts`, fd).subscribe(r=>{ this.posts.unshift(r.data?.post); this.postForm.reset(); }); }
   createAssignment(){ if (this.asgForm.invalid) return; const payload = { room: this.roomId, ...this.asgForm.value }; this.http.post<any>(`${environment.apiUrl}/classroom/assignments`, payload).subscribe(r=>{ this.assignments.unshift(r.data?.assignment); this.asgForm.reset(); }); }
