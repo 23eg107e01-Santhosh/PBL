@@ -20,4 +20,7 @@ export class ResourceService {
   list(roomId: string): Observable<any> {
     return this.http.get(`${this.api}/resources/${roomId}`);
   }
+  delete(id: string): Observable<any> {
+    return this.http.delete(`${this.api}/resources/${id}`);
+  }
 }

@@ -25,14 +25,10 @@ import { ChatApiService } from '../../core/services/chat-api.service';
         <div class="typing" *ngIf="typingUsers.size">Someone is typing...</div>
       </div>
       <form [formGroup]="form" (ngSubmit)="send()" class="composer" (keydown)="notifyTyping(true)" (keyup)="notifyTyping(false)">
-        <button mat-icon-button type="button" (click)="fileInput.click()" aria-label="Attach">
-          <mat-icon>attach_file</mat-icon>
-        </button>
-        <input #fileInput type="file" hidden (change)="onFile($event)" accept=".pdf,.ppt,.pptx,image/*" />
         <mat-form-field appearance="outline" class="grow">
           <input matInput formControlName="text" placeholder="Type a message" />
         </mat-form-field>
-        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid && !pendingFile">Send</button>
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Send</button>
       </form>
     </div>
   `,
@@ -45,8 +41,6 @@ import { ChatApiService } from '../../core/services/chat-api.service';
     .content{color:#e5e7eb;}
     .content.file a{margin-right:8px;}
     .composer{display:flex;gap:8px;align-items:center;margin-top:12px;}
-    /* Ensure the attach_file icon is visible on dark background */
-    .composer button[mat-icon-button] mat-icon{color:#fff !important;}
     .composer .grow{flex:1;}
     .typing{color:#94a3b8;font-style:italic;}
   `],
@@ -57,7 +51,6 @@ export class ClassChatComponent implements OnInit, OnDestroy {
   myUserId!: string;
   messages: any[] = [];
   form!: FormGroup;
-  pendingFile: File | null = null;
   typingUsers = new Set<string>();
   typingTimeout: any = null;
   @ViewChild('scrollArea') scrollArea!: ElementRef<HTMLDivElement>;
@@ -100,35 +93,9 @@ export class ClassChatComponent implements OnInit, OnDestroy {
     this.typingTimeout = setTimeout(()=> this.chat.emitTyping(this.roomId, this.myUserId, false), isDown ? 1200 : 300);
   }
 
-  onFile(ev: Event){ const input = ev.target as HTMLInputElement; this.pendingFile = (input.files && input.files[0]) || null; }
-
   send(): void {
     const text: string = (this.form.value.text || '').trim();
-    
-    // Handle file upload first
-    if (this.pendingFile) {
-      this.chat.uploadAttachment(this.pendingFile).subscribe({
-        next: (res: any) => {
-          const { fileUrl, fileName } = res.data || res;
-          // Emit file upload event
-          (this.chat as any).socket.emit('fileUpload', { 
-            roomId: this.roomId, 
-            senderId: this.myUserId, 
-            fileUrl, 
-            fileName 
-          });
-          this.pendingFile = null;
-          // Clear file input
-          const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-          if (fileInput) fileInput.value = '';
-        },
-        error: (err) => {
-          console.error('File upload failed:', err);
-          this.pendingFile = null;
-        }
-      });
-    }
-    
+    // Only send text messages
     // Send text message
     if (text) {
       this.chat.sendMessage(this.roomId, this.myUserId, text);

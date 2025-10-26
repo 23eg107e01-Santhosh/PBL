@@ -53,6 +53,11 @@ import { environment } from '@environments/environment';
               <ng-container *ngFor="let it of resources">
               <mat-list-item (click)="openResource(it)" class="resource-item" *ngIf="it.type==='file'">
                 <div matListItemTitle class="r-title">{{ it.description || it.fileName }}</div>
+                <div matListItemMeta *ngIf="canDelete(it)">
+                  <button mat-icon-button color="warn" (click)="removeResource(it, $event)" aria-label="Delete resource">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
                 <div matListItemLine class="r-preview" *ngIf="isImage(it.fileUrl)">
                   <img [src]="abs(it.fileUrl)" alt="preview" class="preview-img" />
                 </div>
@@ -178,6 +183,8 @@ export class RoomDetailComponent implements OnInit, OnDestroy {
   isPdf(url: string){ return /\.pdf$/i.test(url || ''); }
   abs(url: string){ if (!url) return ''; if (/^https?:\/\//i.test(url)) return url; if (url.startsWith('/')) return this.apiBase + url; return this.apiBase + '/' + url; }
   trustSrc(url: string): SafeResourceUrl { return this.sanitizer.bypassSecurityTrustResourceUrl(this.abs(url)); }
+  canDelete(it: any){ const me = this.auth.currentUserValue; if (!me) return false; const isOwner = it?.uploadedBy && (it.uploadedBy._id ? it.uploadedBy._id : it.uploadedBy) === me.id; const isStaff = me.role === 'teacher' || me.role === 'admin'; return !!(isOwner || isStaff); }
+  removeResource(it: any, ev: Event){ ev.stopPropagation(); if (!confirm('Delete this resource?')) return; this.resApi.delete(it._id).subscribe({ next: ()=>{ this.resources = this.resources.filter(r=> r._id !== it._id); }, error: ()=>{} }); }
   
   createPost(){ if (this.postForm.invalid) return; const fd = new FormData(); fd.append('room', this.roomId); fd.append('text', this.postForm.value.text); this.http.post<any>(`${environment.apiUrl}/classroom/posts`, fd).subscribe(r=>{ this.posts.unshift(r.data?.post); this.postForm.reset(); }); }
   createAssignment(){ if (this.asgForm.invalid) return; const payload = { room: this.roomId, ...this.asgForm.value }; this.http.post<any>(`${environment.apiUrl}/classroom/assignments`, payload).subscribe(r=>{ this.assignments.unshift(r.data?.assignment); this.asgForm.reset(); }); }

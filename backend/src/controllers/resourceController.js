@@ -1,4 +1,6 @@
 const { Resource } = require('../models');
+const fs = require('fs');
+const path = require('path');
 
 const uploadResource = async (req, res) => {
   try {
@@ -47,3 +49,32 @@ const listResources = async (req, res) => {
 };
 
 module.exports = { uploadResource, listResources };
+ 
+// Delete a resource (uploader or teacher/admin)
+const deleteResource = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const doc = await Resource.findById(id).select('uploadedBy type fileUrl');
+    if (!doc) return res.status(404).json({ success: false, message: 'Resource not found' });
+    const isOwner = String(doc.uploadedBy) === String(req.user._id);
+    const isStaff = req.user.role === 'teacher' || req.user.role === 'admin';
+    if (!isOwner && !isStaff) return res.status(403).json({ success: false, message: 'Not allowed' });
+
+    // Attempt to remove file from disk for file resources
+    if (doc.type === 'file' && doc.fileUrl) {
+      try {
+        const rel = doc.fileUrl.replace(/^\//, '');
+        const abs = path.join(__dirname, '../..', rel);
+        fs.unlink(abs, () => {});
+      } catch (_) { /* ignore file delete errors */ }
+    }
+
+    await Resource.findByIdAndDelete(id);
+    res.json({ success: true, message: 'Resource deleted' });
+  } catch (e) {
+    console.error('Delete resource error:', e);
+    res.status(500).json({ success: false, message: 'Server error deleting resource' });
+  }
+};
+
+module.exports.deleteResource = deleteResource;
