@@ -1,6 +1,6 @@
 # Study Collab - Class Management System
 
-A modern, full-stack class management system now using **Angular** for the frontend and **Node.js/Express + MongoDB** for the backend. (The original React implementation has been removed in favor of the new Angular application.)
+A modern, full-stack class management system now using **Angular** for the frontend and **Node.js/Express + MongoDB** for the backend.
 
 ## ✨ Features
 
